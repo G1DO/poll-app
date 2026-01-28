@@ -111,7 +111,7 @@ This is **service discovery** — Prometheus finds your app without hardcoded IP
 
 | Milestone | You'll Learn |
 |-----------|--------------|
-| M1 | EC2 setup + k3s installation |
+| M1 | EC2 setup + k3s installation (Terraform or manual) |
 | M2 | Backend with metrics + Dockerfile |
 | M3 | Frontend + Dockerfile |
 | M4 | Pushing images to Docker Hub |

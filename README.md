@@ -91,6 +91,12 @@ poll-app/
 │       ├── deployment.yaml
 │       └── service.yaml
 │
+├── terraform/
+│   └── aws/
+│       ├── main.tf            # VPC, EC2, security groups, k3s install
+│       ├── variables.tf       # Instance type, region configuration
+│       └── outputs.tf         # Public IP, SSH key outputs
+│
 ├── scripts/
 │   └── load-test.sh
 │
@@ -157,14 +163,32 @@ Start with [00-overview.md](docs/00-overview.md) for the big picture.
 
 ### 1. Launch EC2 + Install k3s
 
+**Option A: Using Terraform (Recommended)**
 ```bash
-# Launch t3.medium Ubuntu 24.04
+cd terraform/aws
+terraform init
+terraform apply
+
+# Get outputs
+terraform output server_public_ip
+terraform output -raw private_key > poll-app-key.pem
+chmod 400 poll-app-key.pem
+
+# SSH in (k3s already installed via user_data)
+ssh -i poll-app-key.pem ubuntu@<EC2-PUBLIC-IP>
+```
+
+**Option B: Manual Setup**
+```bash
+# Launch t3.medium Ubuntu 22.04 (ami-0c7217cdde317cfec in us-east-1)
 # Open ports: 22, 30080, 30090, 30030
 
 # SSH in and install k3s
 curl -sfL https://get.k3s.io | sh -
+```
 
-# Setup kubectl
+**Both options: Setup kubectl**
+```bash
 mkdir -p ~/.kube
 sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
 sudo chown $USER:$USER ~/.kube/config

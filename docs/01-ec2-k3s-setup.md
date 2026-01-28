@@ -29,11 +29,11 @@ By default, EC2 blocks all inbound traffic. You explicitly allow:
 |------|---------|------------------|
 | 22 | SSH | Your IP only |
 | 30080 | App (NodePort) | Everyone (0.0.0.0/0) |
-| 30090 | Prometheus | Your IP only |
-| 30030 | Grafana | Your IP only |
+| 30090 | Prometheus | Your IP only (production) or 0.0.0.0/0 (learning) |
+| 30030 | Grafana | Your IP only (production) or 0.0.0.0/0 (learning) |
 | 6443 | K8s API | Your IP (optional) |
 
-**Why restrict Prometheus/Grafana?** They expose internal metrics. In production, you'd put them behind authentication.
+**Why restrict Prometheus/Grafana?** They expose internal metrics. In production, you'd put them behind authentication. The Terraform config in this project opens these ports to 0.0.0.0/0 for learning convenience — you should restrict them in production.
 
 ### k3s Architecture
 
@@ -91,9 +91,45 @@ It reads config from `~/.kube/config` to know which cluster to talk to.
 
 ### 1. Launch EC2 Instance
 
-Using AWS Console (or CLI):
+You have two options:
 
-- **AMI**: Ubuntu 24.04 LTS (or latest Ubuntu)
+#### Option A: Using Terraform (Recommended)
+
+The project includes Terraform configuration in `terraform/aws/` that automates EC2 provisioning:
+
+```bash
+cd terraform/aws
+
+# Initialize Terraform
+terraform init
+
+# Preview what will be created
+terraform plan
+
+# Create the infrastructure
+terraform apply
+
+# Get the public IP
+terraform output server_public_ip
+
+# Get the SSH key (save to a file)
+terraform output -raw private_key > poll-app-key.pem
+chmod 400 poll-app-key.pem
+```
+
+This creates:
+- VPC with public subnet
+- Internet gateway and routing
+- Security group with required ports
+- EC2 instance (t3.medium, Ubuntu 22.04)
+- SSH key pair (auto-generated)
+- k3s installed via user_data
+
+**Note**: The Terraform config opens all ports (30080, 30090, 30030, 6443) to 0.0.0.0/0 for learning convenience. In production, restrict monitoring ports to your IP.
+
+#### Option B: Using AWS Console (Manual)
+
+- **AMI**: Ubuntu 22.04 LTS (ami-0c7217cdde317cfec in us-east-1)
 - **Instance type**: t3.medium
 - **Key pair**: Create new or use existing (.pem file)
 - **Security group**: Create new with rules from table above
@@ -107,11 +143,16 @@ chmod 400 your-key.pem
 
 # Connect
 ssh -i your-key.pem ubuntu@<EC2-PUBLIC-IP>
+
+# If you used Terraform, the key file is poll-app-key.pem
+ssh -i poll-app-key.pem ubuntu@<EC2-PUBLIC-IP>
 ```
 
 ### 3. Install k3s
 
-On the EC2 instance:
+**If you used Terraform**: k3s is already installed via user_data. Skip to step 4.
+
+On the EC2 instance (manual setup only):
 
 ```bash
 # One command to install k3s
@@ -194,6 +235,20 @@ Check:
 - Is the instance type large enough? (t3.micro may struggle)
 - Is there enough disk space? (`df -h`)
 - Check logs: `sudo journalctl -u k3s`
+
+</details>
+
+<details>
+<summary>How do I destroy the Terraform infrastructure?</summary>
+
+When you're done with the project, clean up to avoid charges:
+
+```bash
+cd terraform/aws
+terraform destroy
+```
+
+This removes the EC2 instance, VPC, security group, and all related resources.
 
 </details>
 

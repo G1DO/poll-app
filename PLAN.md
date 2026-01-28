@@ -106,7 +106,16 @@ Plus automatic K8s metrics:
 ## Milestones
 
 ### M1: EC2 + k3s Setup (30-45 min)
-- [ ] Launch EC2 instance (t3.medium, Ubuntu 24.04)
+
+**Option A: Using Terraform (Recommended)**
+- [ ] Navigate to `terraform/aws/`
+- [ ] Run `terraform init && terraform apply`
+- [ ] Extract SSH key: `terraform output -raw private_key > poll-app-key.pem`
+- [ ] Get public IP: `terraform output server_public_ip`
+- [ ] SSH in: `ssh -i poll-app-key.pem ubuntu@<IP>`
+
+**Option B: Manual Setup**
+- [ ] Launch EC2 instance (t3.medium, Ubuntu 22.04 - ami-0c7217cdde317cfec in us-east-1)
 - [ ] Configure security group:
   - 22 (SSH)
   - 30080 (App)
@@ -117,6 +126,8 @@ Plus automatic K8s metrics:
   ```bash
   curl -sfL https://get.k3s.io | sh -
   ```
+
+**Both options:**
 - [ ] Verify cluster:
   ```bash
   sudo kubectl get nodes
@@ -326,6 +337,12 @@ poll-app/
 │       ├── deployment.yaml
 │       └── service.yaml
 │
+├── terraform/
+│   └── aws/
+│       ├── main.tf           # VPC, EC2, security groups, k3s install
+│       ├── variables.tf      # Instance type (t3.medium), region (us-east-1)
+│       └── outputs.tf        # Public IP, SSH private key
+│
 ├── scripts/
 │   ├── load-test.sh
 │   └── setup-ec2.sh
@@ -387,11 +404,13 @@ sum by (pod) (container_memory_usage_bytes{namespace="poll-app"})
 
 | Port  | Protocol | Source    | Purpose          |
 |-------|----------|-----------|------------------|
-| 22    | TCP      | Your IP   | SSH              |
+| 22    | TCP      | 0.0.0.0/0 | SSH              |
 | 30080 | TCP      | 0.0.0.0/0 | App frontend     |
-| 30090 | TCP      | Your IP   | Prometheus UI    |
-| 30030 | TCP      | Your IP   | Grafana UI       |
-| 6443  | TCP      | Your IP   | K8s API (optional)|
+| 30090 | TCP      | 0.0.0.0/0 | Prometheus UI    |
+| 30030 | TCP      | 0.0.0.0/0 | Grafana UI       |
+| 6443  | TCP      | 0.0.0.0/0 | K8s API          |
+
+**Note**: The Terraform config opens all ports to 0.0.0.0/0 for learning convenience. In production, restrict SSH and monitoring ports (30090, 30030, 6443) to your IP only.
 
 ---
 
