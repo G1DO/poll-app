@@ -127,7 +127,9 @@ resource "aws_instance" "poll_server" {
 
     user_data = <<-EOF
         #!/bin/bash
-        curl -sfL https://get.k3s.io | sh -
+        # Get public IP from EC2 metadata and install k3s with TLS SAN
+        PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+        curl -sfL https://get.k3s.io | sh -s - --tls-san $PUBLIC_IP
     EOF
     
     tags = {
