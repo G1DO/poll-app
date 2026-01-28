@@ -79,7 +79,7 @@ k3s is real Kubernetes — just packaged better.
 |----------------|-----------------------------------------|
 | Infrastructure | EC2 (t3.medium), k3s                    |
 | Frontend       | React 18, TypeScript, Vite, Tailwind    |
-| Backend        | Express, TypeScript, prom-client        |
+| Backend        | NestJS, TypeScript, prom-client          |
 | Container      | Docker, pushed to Docker Hub            |
 | Orchestration  | Kubernetes (k3s)                        |
 | Metrics        | Prometheus (kube-prometheus-stack)      |
@@ -144,7 +144,7 @@ Plus automatic K8s metrics:
 ---
 
 ### M2: Backend with Metrics (1-2 hours)
-- [ ] Initialize Express + TypeScript project
+- [ ] Initialize NestJS + TypeScript project
 - [ ] Create health endpoints:
   - `GET /health` (liveness)
   - `GET /ready` (readiness)
@@ -307,12 +307,16 @@ Plus automatic K8s metrics:
 poll-app/
 ├── backend/
 │   ├── src/
-│   │   ├── index.ts
-│   │   ├── metrics.ts
-│   │   ├── routes/
-│   │   │   └── polls.ts
-│   │   └── store/
-│   │       └── polls.ts
+│   │   ├── main.ts              # NestJS entry point
+│   │   ├── app.module.ts        # Root module
+│   │   ├── polls/
+│   │   │   ├── polls.module.ts
+│   │   │   ├── polls.controller.ts
+│   │   │   └── polls.service.ts
+│   │   └── metrics/
+│   │       ├── metrics.module.ts
+│   │       ├── metrics.controller.ts
+│   │       └── metrics.service.ts
 │   ├── Dockerfile
 │   ├── package.json
 │   └── tsconfig.json

@@ -5,7 +5,7 @@
 The backend is the heart of your app — it handles business logic, stores data, and exposes metrics for observability.
 
 This milestone combines:
-1. Express + TypeScript setup
+1. NestJS + TypeScript setup
 2. Poll API (create, vote, get results)
 3. Prometheus metrics
 4. Kubernetes-ready health checks
@@ -90,14 +90,16 @@ Result: Smaller image, no source code, no dev tools.
 ```
 backend/
 ├── src/
-│   ├── index.ts           # Express app entry, health endpoints
-│   ├── metrics.ts         # Prometheus registry + custom metrics
-│   ├── routes/
-│   │   └── polls.ts       # Poll CRUD endpoints
-│   ├── middleware/
-│   │   └── metrics.ts     # Request duration middleware
-│   └── store/
-│       └── polls.ts       # In-memory storage
+│   ├── main.ts              # NestJS entry point
+│   ├── app.module.ts        # Root module
+│   ├── polls/
+│   │   ├── polls.module.ts
+│   │   ├── polls.controller.ts
+│   │   └── polls.service.ts
+│   └── metrics/
+│       ├── metrics.module.ts
+│       ├── metrics.controller.ts
+│       └── metrics.service.ts
 ├── Dockerfile
 ├── package.json
 └── tsconfig.json
@@ -105,7 +107,7 @@ backend/
 
 ### 2. Initialize Project
 
-- npm init, install Express, TypeScript, prom-client
+- Initialize NestJS project, install prom-client
 - Configure tsconfig for Node.js
 - Set up build script to compile TypeScript
 
@@ -135,14 +137,14 @@ Use in-memory storage (object or Map). No database needed.
 | `http_requests_total` | Counter | `method`, `path`, `status` |
 | `http_request_duration_seconds` | Histogram | `method`, `path` |
 
-### 6. Request Duration Middleware
+### 6. Request Duration Interceptor
 
-Create middleware that:
+Create a NestJS interceptor that:
 - Records timestamp before handler
 - Records duration after response
 - Observes in histogram
 
-**Key insight**: Use `res.on('finish', ...)` to run code after response.
+**Key insight**: NestJS uses interceptors (not Express middleware) to wrap request/response lifecycle. Use `tap()` from RxJS in the interceptor.
 
 ### 7. Dockerfile
 

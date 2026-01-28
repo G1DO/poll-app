@@ -17,7 +17,7 @@ A full-stack TypeScript voting app deployed to Kubernetes (k3s), instrumented wi
 │  │   │  ┌─────────────┐       ┌─────────────┐                         │  │ │
 │  │   │  │   frontend  │       │   backend   │                         │  │ │
 │  │   │  │   Pod(s)    │──────►│   Pod(s)    │────► /metrics           │  │ │
-│  │   │  │   nginx     │       │   Express   │                         │  │ │
+│  │   │  │   nginx     │       │   NestJS    │                         │  │ │
 │  │   │  └─────────────┘       └─────────────┘                         │  │ │
 │  │   │         │                     │                                │  │ │
 │  │   │    NodePort              ClusterIP                             │  │ │
@@ -48,7 +48,7 @@ Access:
 |-------|------------|
 | Infrastructure | AWS EC2 (t3.medium), k3s |
 | Frontend | React 18, TypeScript, Vite, Tailwind |
-| Backend | Express, TypeScript, prom-client |
+| Backend | NestJS, TypeScript, prom-client |
 | Container | Docker, Docker Hub |
 | Orchestration | Kubernetes (k3s) |
 | Metrics | Prometheus (kube-prometheus-stack) |
@@ -60,12 +60,16 @@ Access:
 poll-app/
 ├── backend/
 │   ├── src/
-│   │   ├── index.ts           # Express app, health endpoints
-│   │   ├── metrics.ts         # Prometheus registry
-│   │   ├── routes/
-│   │   │   └── polls.ts       # Poll API endpoints
-│   │   └── store/
-│   │       └── polls.ts       # In-memory storage
+│   │   ├── main.ts              # NestJS entry point
+│   │   ├── app.module.ts        # Root module
+│   │   ├── polls/
+│   │   │   ├── polls.module.ts
+│   │   │   ├── polls.controller.ts
+│   │   │   └── polls.service.ts
+│   │   └── metrics/
+│   │       ├── metrics.module.ts
+│   │       ├── metrics.controller.ts
+│   │       └── metrics.service.ts
 │   ├── Dockerfile
 │   ├── package.json
 │   └── tsconfig.json
