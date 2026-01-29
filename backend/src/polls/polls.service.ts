@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { MetricsService } from '../metrics/metrics.service';
 
 export interface Poll {
   id: string;
@@ -10,6 +11,10 @@ export interface Poll {
 @Injectable()
 export class PollsService {
   private polls = new Map<string, Poll>();
+
+  constructor(private readonly metricsService: MetricsService) {
+    this.create('Tabs or Spaces?', ['Tabs', 'Spaces']);
+  }
 
   findAll(): Poll[] {
     return Array.from(this.polls.values());
@@ -40,6 +45,7 @@ export class PollsService {
       throw new NotFoundException(`Option "${option}" not found in poll`);
     }
     poll.votes[option]++;
+    this.metricsService.recordVote(id, option);
     return poll;
   }
 }
